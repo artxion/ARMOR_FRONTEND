@@ -12,7 +12,6 @@
       background: linear-gradient(to bottom right, #ff0066 5%, #ffe6f0 50%, #fff6fa 100%);
       color: #333;
     }
-
     .profile-sidebar {
       height: 100vh;
       width: 240px;
@@ -26,13 +25,11 @@
       padding-top: 20px;
       z-index: 1000;
     }
-
     .profile-sidebar img {
       height: 60px;
       margin-left: 20px;
       margin-bottom: 30px;
     }
-
     .profile-sidebar a {
       padding: 18px 30px;
       text-decoration: none;
@@ -40,16 +37,13 @@
       color: #fff;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
-
     .profile-sidebar a:hover {
       color: #ff66a3;
     }
-
     .profile-content {
       margin-left: 250px;
       padding: 40px;
     }
-
     footer {
       text-align: center;
       padding: 30px;
@@ -58,12 +52,10 @@
       font-size: 14px;
       margin-top: 50px;
     }
-
     .profile-pic-section {
       text-align: center;
       margin-bottom: 40px;
     }
-
     .profile-pic-section img {
       width: 140px;
       height: 140px;
@@ -73,28 +65,23 @@
       cursor: pointer;
       transition: transform 0.3s ease;
     }
-
     .profile-pic-section img:hover {
       transform: scale(1.05);
     }
-
     .upload-note {
       font-size: 14px;
       color: #888;
       margin-top: 10px;
     }
-
     #user-info p {
       font-size: 18px;
       margin: 10px 0;
     }
-
     #edit-form input {
       padding: 8px;
       width: 250px;
       font-size: 16px;
     }
-
     #edit-form button {
       padding: 10px 20px;
       background-color: #ff66a3;
@@ -104,7 +91,6 @@
       cursor: pointer;
       font-size: 16px;
     }
-
     #edit-form button:hover {
       background-color: #e65590;
     }
@@ -124,7 +110,6 @@
   <!-- Main content -->
   <div class="profile-content">
 
-    <!-- Profile Picture -->
     <div class="profile-pic-section">
       <label for="profile-pic-upload">
         <img src="images/default-picture.jpg" alt="Profile Picture" id="profile-pic">
@@ -135,9 +120,6 @@
 
     <h2>Welcome to Your Profile</h2>
     <p>Select a section from the sidebar to view or manage your information.</p>
-    <br>
-    
-  
 
     <!-- User Info -->
     <div id="user-info" style="margin-top: 40px;">
@@ -164,7 +146,6 @@
         <button type="submit">Save Changes</button>
       </form>
     </div>
-
   </div>
 
   <!-- Footer -->
@@ -173,6 +154,7 @@
   </footer>
 
   <script>
+    const BACKEND_URL = "https://armor-backend-y28q.onrender.com";
     const uploadInput = document.getElementById('profile-pic-upload');
     const profileImg = document.getElementById('profile-pic');
 
@@ -201,7 +183,7 @@
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`);
+        const response = await fetch(`${BACKEND_URL}/api/auth/user/${userEmail}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -221,7 +203,7 @@
             const phone = document.getElementById('edit-phone').value.trim();
 
             try {
-              const updateResponse = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`, {
+              const updateResponse = await fetch(`${BACKEND_URL}/api/auth/user/${userEmail}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, dob, phone })
@@ -253,6 +235,5 @@
       }
     });
   </script>
-
 </body>
 </html>
