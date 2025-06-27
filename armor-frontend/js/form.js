@@ -2,13 +2,8 @@
 function togglePassword(inputId, toggleIcon) {
   const input = document.getElementById(inputId);
   const type = input.getAttribute("type");
-  if (type === "password") {
-    input.setAttribute("type", "text");
-    toggleIcon.textContent = "🚫👁️";
-  } else {
-    input.setAttribute("type", "password");
-    toggleIcon.textContent = "👁️";
-  }
+  input.setAttribute("type", type === "password" ? "text" : "password");
+  toggleIcon.textContent = type === "password" ? "🚫👁️" : "👁️";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -21,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const navAuth = document.getElementById("nav-auth");
   const profileDropdown = document.getElementById("profile-dropdown");
 
+  const BACKEND_URL = "https://armor-backend-y28q.onrender.com"; // ✅ Your Render backend
+
   // ✅ PROFILE DROPDOWN DISPLAY
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   if (isLoggedIn) {
@@ -31,38 +28,35 @@ document.addEventListener("DOMContentLoaded", () => {
   // ✅ LOGIN HANDLER
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value.trim();
 
     if (!email || !password) {
-      loginError.textContent = "Please fill all the details.";
-      loginError.classList.add("show");
-      setTimeout(() => loginError.classList.remove("show"), 4000);
+      showError(loginError, "Please fill all the details.");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userEmail", email);
         alert("Login successful! Redirecting...");
         window.location.href = "index.html";
       } else {
-        loginError.textContent = data.message || "Login failed.";
-        loginError.classList.add("show");
-        setTimeout(() => loginError.classList.remove("show"), 4000);
+        showError(loginError, data.message || "Login failed.");
       }
     } catch (err) {
-      loginError.textContent = "Server error. Try again later.";
-      loginError.classList.add("show");
-      setTimeout(() => loginError.classList.remove("show"), 4000);
+      console.error(err);
+      showError(loginError, "Server error. Please try again later.");
     }
   });
 
@@ -78,27 +72,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const phone = document.getElementById("register-phone").value.trim();
 
     if (!name || !email || !password || !confirm || !dob || !phone) {
-      registerError.textContent = "Please fill all the details.";
-      registerError.classList.add("show");
-      setTimeout(() => registerError.classList.remove("show"), 4000);
+      showError(registerError, "Please fill all the details.");
       return;
     }
 
     if (password !== confirm) {
-      registerError.textContent = "Passwords do not match.";
-      registerError.classList.add("show");
-      setTimeout(() => registerError.classList.remove("show"), 4000);
+      showError(registerError, "Passwords do not match.");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, dob, phone }),
       });
 
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem("userEmail", email);
         localStorage.setItem("isLoggedIn", "true");
@@ -106,19 +97,24 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "login.html";
       } else {
         if (response.status === 409 || data.message?.toLowerCase().includes("exist")) {
-          registerError.textContent = "User already registered. Please log in.";
+          showError(registerError, "User already registered. Please log in.");
         } else {
-          registerError.textContent = data.message || "Registration failed.";
+          showError(registerError, data.message || "Registration failed.");
         }
-        registerError.classList.add("show");
-        setTimeout(() => registerError.classList.remove("show"), 4000);
       }
     } catch (err) {
-      registerError.textContent = "Server error. Try again later.";
-      registerError.classList.add("show");
-      setTimeout(() => registerError.classList.remove("show"), 4000);
+      console.error(err);
+      showError(registerError, "Server error. Please try again later.");
     }
   });
+
+  // ✅ Error Utility Function
+  function showError(element, message) {
+    if (!element) return;
+    element.textContent = message;
+    element.classList.add("show");
+    setTimeout(() => element.classList.remove("show"), 4000);
+  }
 });
 
 // ✅ LOGOUT
