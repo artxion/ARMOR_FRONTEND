@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Logo Centered -->
+<div class="top-logo">
+  <img src="images/logo.jpg" alt="ARMOR Logo">
+</div>
+
+
+  <meta charset="UTF-8">
+  <title>Login – ARMOR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="js/form.js"></script>
+</head>
+<body class="auth-page">
+
+
+
+
+  <div class="form-container animated-form">
+    <h2>Login</h2>
+    <form id="login-form">
+  <input type="email" id="login-email" placeholder="Email">
+  <div class="password-field">
+    <input type="password" id="login-password" placeholder="Password">
+    <span class="toggle-password" onclick="togglePassword('login-password', this)">👁️</span>
+  </div>
+  <button type="submit">Login</button>
+</form>
+
+    <p class="form-footer">New here? <a href="register.html">Register here</a></p>
+    <p id="login-error" class="error-message"></p>
+  </div>
+<footer>
+  <p>© 2025 ARMOR. All Rights Reserved.</p>
+</footer>
+
+</body>
+</html>

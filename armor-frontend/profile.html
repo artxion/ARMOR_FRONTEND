@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile – ARMOR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #ff0066 5%, #ffe6f0 50%, #fff6fa 100%);
+      color: #333;
+    }
+
+    .profile-sidebar {
+      height: 100vh;
+      width: 240px;
+      background-color: #000;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 20px;
+      z-index: 1000;
+    }
+
+    .profile-sidebar img {
+      height: 60px;
+      margin-left: 20px;
+      margin-bottom: 30px;
+    }
+
+    .profile-sidebar a {
+      padding: 18px 30px;
+      text-decoration: none;
+      font-size: 20px;
+      color: #fff;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .profile-sidebar a:hover {
+      color: #ff66a3;
+    }
+
+    .profile-content {
+      margin-left: 250px;
+      padding: 40px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      background-color: #000;
+      color: #fff;
+      font-size: 14px;
+      margin-top: 50px;
+    }
+
+    .profile-pic-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .profile-pic-section img {
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 4px solid #ff66a3;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .profile-pic-section img:hover {
+      transform: scale(1.05);
+    }
+
+    .upload-note {
+      font-size: 14px;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    #user-info p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    #edit-form input {
+      padding: 8px;
+      width: 250px;
+      font-size: 16px;
+    }
+
+    #edit-form button {
+      padding: 10px 20px;
+      background-color: #ff66a3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #edit-form button:hover {
+      background-color: #e65590;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="profile-sidebar">
+    <img src="images/logo.jpg" alt="ARMOR Logo">
+    <a href="index.html">Home</a>
+    <a href="#">Verification</a>
+    <a href="#" id="edit-details-btn">Edit Details</a>
+    <a href="#">Upgrade to Pro</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="profile-content">
+
+    <!-- Profile Picture -->
+    <div class="profile-pic-section">
+      <label for="profile-pic-upload">
+        <img src="images/default-picture.jpg" alt="Profile Picture" id="profile-pic">
+      </label>
+      <input type="file" id="profile-pic-upload" accept="image/*" hidden>
+      <p class="upload-note">Click the picture to upload a new one</p>
+    </div>
+
+    <h2>Welcome to Your Profile</h2>
+    <p>Select a section from the sidebar to view or manage your information.</p>
+    <br>
+    
+  
+
+    <!-- User Info -->
+    <div id="user-info" style="margin-top: 40px;">
+      <h3>Your Details</h3>
+      <p><strong>Name:</strong> <span id="user-name">Loading...</span></p>
+      <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
+      <p><strong>Date of Birth:</strong> <span id="user-dob">Loading...</span></p>
+      <p><strong>Phone Number:</strong> <span id="user-phone">Loading...</span></p>
+    </div>
+
+    <!-- Edit Form -->
+    <div id="edit-section" style="display: none; margin-top: 30px;">
+      <h3>Edit Your Details</h3>
+      <form id="edit-form">
+        <label>Name:</label><br>
+        <input type="text" id="edit-name" /><br><br>
+
+        <label>Date of Birth:</label><br>
+        <input type="date" id="edit-dob" /><br><br>
+
+        <label>Phone Number:</label><br>
+        <input type="text" id="edit-phone" /><br><br>
+
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 ARMOR. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    const uploadInput = document.getElementById('profile-pic-upload');
+    const profileImg = document.getElementById('profile-pic');
+
+    uploadInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          profileImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('edit-details-btn').addEventListener('click', () => {
+        const editSection = document.getElementById('edit-section');
+        editSection.style.display = editSection.style.display === 'none' ? 'block' : 'none';
+      });
+
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        alert("Not logged in. Redirecting to login.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('user-name').textContent = data.name;
+          document.getElementById('user-email').textContent = data.email;
+          document.getElementById('user-dob').textContent = data.dob || 'Not provided';
+          document.getElementById('user-phone').textContent = data.phone || 'Not provided';
+
+          document.getElementById('edit-name').value = data.name;
+          document.getElementById('edit-dob').value = data.dob || '';
+          document.getElementById('edit-phone').value = data.phone || '';
+
+          document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('edit-name').value.trim();
+            const dob = document.getElementById('edit-dob').value.trim();
+            const phone = document.getElementById('edit-phone').value.trim();
+
+            try {
+              const updateResponse = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, dob, phone })
+              });
+
+              const updateData = await updateResponse.json();
+              if (updateResponse.ok) {
+                alert("Profile updated!");
+                document.getElementById('user-name').textContent = updateData.user.name;
+                document.getElementById('user-dob').textContent = updateData.user.dob;
+                document.getElementById('user-phone').textContent = updateData.user.phone;
+                document.getElementById('edit-section').style.display = 'none';
+              } else {
+                alert(updateData.message || "Update failed");
+              }
+            } catch (err) {
+              alert("Server error during update.");
+              console.error(err);
+            }
+          });
+
+        } else {
+          alert("User not found. Redirecting...");
+          window.location.href = "login.html";
+        }
+      } catch (err) {
+        alert("Error loading profile data.");
+        console.error(err);
+      }
+    });
+  </script>
+
+</body>
+</html>

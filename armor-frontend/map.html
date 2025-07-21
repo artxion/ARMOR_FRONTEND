@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Emergency Map – ARMOR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    * { font-family: 'Nunito Sans', sans-serif; box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      background: #ff0066;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .button-panel {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 15px;
+      background: #ffe6f0;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .emergency-btn {
+      background: #ff0066;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 12px 24px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .emergency-btn:hover {
+      background: #e6005c;
+      transform: scale(1.05);
+    }
+    #map {
+      width: 100%;
+      height: calc(100vh - 120px);
+    }
+  </style>
+</head>
+<body>
+
+  <header>🚨 Live Emergency Map – You & Nearby Help</header>
+  <div class="button-panel">
+    <button class="emergency-btn" onclick="callEmergency('100')"><i class="fas fa-phone-alt"></i>Call Police</button>
+    <button class="emergency-btn" onclick="callEmergency('102')"><i class="fas fa-ambulance"></i>Call Ambulance</button>
+    <button class="emergency-btn" onclick="shareLoc()"><i class="fas fa-location-arrow"></i>Share Location</button>
+  </div>
+  <div id="map"></div>
+
+  <!-- JS Libraries -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
+  <script>
+    const map = L.map('map').setView([20.5937, 78.9629], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let userMarker, routingControl;
+    const radius = 2000; // in meters
+    const pois = [];
+
+    const amenityIcons = {
+      hospital: 'https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/hospital-71.png',
+      police: 'https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/police-71.png',
+      pharmacy: 'https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/pharmacy-71.png'
+    };
+
+    function updateLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(onPosition, err => alert("Location access denied"), {
+          enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+        });
+      } else {
+        alert("Geolocation not supported");
+      }
+    }
+
+    function onPosition(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (!userMarker) {
+        userMarker = L.marker([lat, lng], {
+          icon: L.icon({
+            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+          })
+        }).addTo(map).bindPopup("You are here").openPopup();
+      } else {
+        userMarker.setLatLng([lat, lng]);
+      }
+
+      map.setView([lat, lng], 16);
+      showNearbyPOIs(lat, lng);
+    }
+
+    function showNearbyPOIs(lat, lng) {
+      pois.forEach(m => map.removeLayer(m));
+      pois.length = 0;
+
+      const query = `
+        [out:json][timeout:25];
+        (
+          node["amenity"~"hospital|pharmacy|police"](around:${radius},${lat},${lng});
+          way["amenity"~"hospital|pharmacy|police"](around:${radius},${lat},${lng});
+          relation["amenity"~"hospital|pharmacy|police"](around:${radius},${lat},${lng});
+        );
+        out center;
+      `;
+
+      fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query,
+        headers: { "Content-Type": "text/plain" }
+      })
+      .then(res => res.json())
+      .then(data => {
+        data.elements.forEach(place => {
+          const type = place.tags?.amenity || "Unknown";
+          const coords = place.type === "node"
+            ? [place.lat, place.lon]
+            : [place.center.lat, place.center.lon];
+
+          const iconUrl = amenityIcons[type] || 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+
+          const marker = L.marker(coords, {
+            icon: L.icon({
+              iconUrl: iconUrl,
+              iconSize: [32, 32],
+              iconAnchor: [16, 32]
+            })
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <b>${place.tags?.name || type.toUpperCase()}</b><br>
+            Type: ${type}<br>
+            <button onclick="getDirections(${coords[0]}, ${coords[1]})">Get Directions</button>
+          `);
+
+          pois.push(marker);
+        });
+      })
+      .catch(err => console.error("Overpass API Error:", err));
+    }
+
+    function getDirections(destLat, destLng) {
+      if (!userMarker) return;
+
+      if (routingControl) map.removeControl(routingControl);
+
+      const userLoc = userMarker.getLatLng();
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(userLoc.lat, userLoc.lng),
+          L.latLng(destLat, destLng)
+        ],
+        routeWhileDragging: false
+      }).addTo(map);
+    }
+
+    function callEmergency(num) {
+      window.location.href = `tel:${num}`;
+    }
+
+    function shareLoc() {
+      if (userMarker) {
+        const { lat, lng } = userMarker.getLatLng();
+        alert(`Share this location:\nLatitude: ${lat}\nLongitude: ${lng}`);
+      }
+    }
+
+    updateLocation();
+  </script>
+</body>
+</html>
