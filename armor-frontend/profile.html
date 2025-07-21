@@ -201,7 +201,7 @@
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`);
+        const response = await fetch(`https://armor-backend-y28q.onrender.com/api/auth/user/${userEmail}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -221,7 +221,7 @@
             const phone = document.getElementById('edit-phone').value.trim();
 
             try {
-              const updateResponse = await fetch(`http://localhost:5000/api/auth/user/${userEmail}`, {
+              const updateResponse = await fetch(`https://armor-backend-y28q.onrender.com/api/auth/user/${userEmail}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, dob, phone })
